@@ -71,6 +71,19 @@ Before any code, the rules went into `AGENTS.md`: what the app is, the rules tha
 
 **What running them caught:** the example meant to show that "run" finds "running" returned the wrong book, because the sample text said "runner", which the English analyzer does not reduce to "run". The sample text was changed and the call run again.
 
+## Step 11. Trying the memory demo before filming it
+
+**Asked:** Run the exact questions the video will show, three times each, and report anything that is not true.
+
+**What running them caught:**
+
+- Asked "Where do I work?", the small model saved a fact nobody stated: "The user works from Lisbon on Fridays." It was the example sentence from its own instructions. Fix: a message that is only a question is never searched for facts, and a fact is kept only when most of its words come from the message. A new test covers it.
+- With "based in the Reno warehouse" remembered, the model still answered "the Oakland office" from a passage. Fix: remembered facts now sit right beside the question in the prompt.
+- The model put a passage number after a sentence it took from memory, so an unrelated page showed as the source. Fix: where a sentence shares more words with a remembered fact than with the passage it cites, it is marked as memory instead.
+- A message that only states a fact ("I am based in the Reno warehouse.") got a wandering answer. It now gets "Got it. I will remember that."
+
+**Check:** the two demo messages gave the same correct result three runs in a row.
+
 ## Final state
 
-`npm test`: 18 tests, 18 pass.
+`npm test`: 19 tests, 19 pass (three runs in a row).

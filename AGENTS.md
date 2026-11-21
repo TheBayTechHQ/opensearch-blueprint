@@ -25,7 +25,7 @@ A change is done when:
 docker compose up -d                 # OpenSearch on 127.0.0.1:9210
 cd server && npm install
 node src/ingest.mjs                  # build the indexes from seed/data.mjs
-npm test                             # 18 tests; the Ask tests call the models
+npm test                             # 19 tests; the Ask tests call the models
 cd ../web && npm install && npm run build
 cd ../server && npm start            # http://localhost:4320
 ```

@@ -115,8 +115,8 @@ Every record has a `space`. Every content and passage record has a `vector` (768
 2. Memory: the nearest memories of this person are fetched (up to three facts and two earlier chats, above a similarity floor).
 3. Search: a hybrid query finds the five passages closest by words and by meaning, inside the person's spaces.
 4. The model gets the passages, numbered, plus the memories, and is told to answer only from them and cite by number.
-5. The answer streams to the screen. Only the passages it cited are shown as sources.
-6. If the message stated a lasting fact about the person, it is saved. A one-line note about the conversation is saved too.
+5. The answer streams to the screen. Only the passages it cited are shown as sources. A sentence that comes from memory is marked as memory, not as a passage.
+6. If the message stated a lasting fact about the person, it is saved, and only when the fact is made of the message's own words. A message that states a fact and asks nothing gets a short confirmation. A one-line note about each answered question is saved too.
 
 ## The API
 
@@ -142,7 +142,7 @@ Send the header `x-user` with a person's id (`ava`, `noor`, ...). There is no si
 cd server && npm test
 ```
 
-Eighteen tests run against the real OpenSearch and the real models: search behaviour, permissions (two people, different results), Ask (an answer with its source, a question with no answer, a question about a space the person is not in) and Memory (save, recall in a new question, delete, and one person's memory never showing for another).
+Nineteen tests run against the real OpenSearch and the real models: search behaviour, permissions (two people, different results), Ask (an answer with its source, a question with no answer, a question about a space the person is not in) and Memory (save, recall in a new question, delete, and one person's memory never showing for another).
 
 ## Settings
 

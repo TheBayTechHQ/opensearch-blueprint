@@ -12,9 +12,11 @@ const STARTERS = ['How many days off do I get?', 'When does firmware 4.2 reach e
  */
 const Answer = ({ text }) => (
   <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-800">
-    {text.split(/(\[\d+\])/).map((part, n) => (/^\[\d+\]$/.test(part)
-      ? <sup key={n} className="mx-0.5 rounded bg-indigo-100 px-1 py-0.5 text-[10px] font-bold text-indigo-700">{part.slice(1, -1)}</sup>
-      : <span key={n}>{part}</span>))}
+    {text.split(/(\[\d+\]|\[M\])/).map((part, n) => {
+      if (part === '[M]') return <sup key={n} title="From memory" className="mx-0.5 inline-flex rounded bg-rose-100 px-1 py-0.5 align-super text-rose-600"><Brain size={10} /></sup>;
+      if (/^\[\d+\]$/.test(part)) return <sup key={n} className="mx-0.5 rounded bg-indigo-100 px-1 py-0.5 text-[10px] font-bold text-indigo-700">{part.slice(1, -1)}</sup>;
+      return <span key={n}>{part}</span>;
+    })}
   </p>
 );
 
@@ -40,6 +42,7 @@ export default function AskPanel({ person, spaces, open, onClose }) {
         if (event === 'step' && data.name === 'memory') update(() => ({ memory: data }));
         if (event === 'step' && data.name === 'search') update(() => ({ search: data }));
         if (event === 'token') update((item) => ({ answer: item.answer + data.text }));
+        if (event === 'answer') update(() => ({ answer: data.text }));
         if (event === 'sources') update(() => ({ sources: data.sources }));
         if (event === 'memory') update(() => ({ saved: data.saved }));
         if (event === 'done') update(() => ({ done: true, ms: data.ms }));

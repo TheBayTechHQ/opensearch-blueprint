@@ -35,6 +35,11 @@ test('a plain question leaves no fact behind', async () => {
   assert.deepEqual(await extractFacts('What is the refund limit for agents?'), []);
 });
 
+test('a question about yourself does not invent a fact', async () => {
+  assert.deepEqual(await extractFacts('Where do I work?'), []);
+  assert.deepEqual(await extractFacts('Which desk is mine? Can I expense my lunch today?'), []);
+});
+
 test('remembers a fact, uses it in a new question, and forgets it when deleted', async () => {
   const first = await ask(tester, 'I am based in the Reno warehouse and I do not come to Oakland. When is the winter party?');
   assert.ok(first.saved.length > 0, 'nothing was saved');
@@ -47,6 +52,8 @@ test('remembers a fact, uses it in a new question, and forgets it when deleted',
   assert.ok(recalled.items.some((text) => /Reno/.test(text)), JSON.stringify(recalled.items));
   const answer = steps.filter(([event]) => event === 'token').map(([, data]) => data.text).join('');
   assert.match(answer, /Reno/);
+  const final = steps.find(([event]) => event === 'answer')[1].text;
+  assert.match(final, /Reno[^[]*\[M\]/, final);
 
   assert.ok((await forget(tester)) > 0);
   assert.equal((await listMemories(tester)).length, 0);

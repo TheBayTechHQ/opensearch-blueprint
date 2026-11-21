@@ -82,6 +82,30 @@ export const forget = async (person, id) => {
 
 // Only messages that talk about the speaker can hold a fact about them.
 const ABOUT_SELF = /\b(i|i'm|i've|my|me|we|our|remember)\b/i;
+// Words that say nothing about what a fact is about.
+const FILLER = new Set(['you', 'your', 'the', 'user', 'users', 'is', 'are', 'was', 'has', 'have', 'and', 'for', 'from', 'with', 'that', 'this', 'their', 'they', 'not', 'does', 'will']);
+
+/**
+ * Splits a text into the start of each meaningful word, so "works" and "work" compare equal.
+ * @param {string} text Any text.
+ * @returns {string[]} Lower-case word starts, at most five letters each.
+ */
+export const wordStarts = (text) => (text.toLowerCase().match(/[a-z0-9]{3,}/g) || []).filter((word) => !FILLER.has(word)).map((word) => word.slice(0, 5).replace(/s$/, ''));
+
+/**
+ * Says whether a fact is made of what the message said. A small model sometimes
+ * answers with a fact from its instructions instead of one from the message.
+ * @param {string} fact The fact the model wrote.
+ * @param {string} message What the person wrote.
+ * @returns {boolean} True when most of the fact's words come from the message.
+ */
+const statedIn = (fact, message) => {
+  const said = new Set(wordStarts(message));
+  const words = wordStarts(fact);
+  // "The user wants to know ..." describes a question, not the person.
+  if (/\b(wants? to know|asks?|asked|asking|wonders?)\b/i.test(fact)) return false;
+  return words.length > 0 && words.filter((word) => said.has(word)).length / words.length >= 0.6;
+};
 
 /**
  * Pulls lasting facts about the speaker out of a message.
@@ -90,6 +114,8 @@ const ABOUT_SELF = /\b(i|i'm|i've|my|me|we|our|remember)\b/i;
  */
 export const extractFacts = async (message) => {
   if (!ABOUT_SELF.test(message)) return [];
+  // A message that is only a question states nothing.
+  if (/^([^.!?]*\?\s*)+$/.test(message.trim())) return [];
   const reply = await chat([
     {
       role: 'system',
@@ -109,7 +135,7 @@ export const extractFacts = async (message) => {
   ], { format: 'json' });
   try {
     const { facts } = JSON.parse(reply);
-    return Array.isArray(facts) ? facts.filter((fact) => typeof fact === 'string' && fact.trim()).map((fact) => fact.trim()).slice(0, 3) : [];
+    return Array.isArray(facts) ? facts.filter((fact) => typeof fact === 'string' && fact.trim() && statedIn(fact, message)).map((fact) => fact.trim()).slice(0, 3) : [];
   } catch {
     return [];
   }
