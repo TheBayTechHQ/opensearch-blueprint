@@ -1,0 +1,16 @@
+# OpenSearch for Plaza: one node, local only, security plugin off (teaching setup).
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.19.1
+    container_name: plaza-opensearch
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "127.0.0.1:9210:9200"
+    volumes:
+      - plaza-data:/usr/share/opensearch/data
+volumes:
+  plaza-data:

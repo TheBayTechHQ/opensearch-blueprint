@@ -1,0 +1,15 @@
+{
+  "name": "plaza-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "seed": "node ../seed/seed.mjs",
+    "ingest": "node src/ingest.mjs",
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+  },
+  "dependencies": {
+    "@opensearch-project/opensearch": "^2.13.0"
+  }
+}
