@@ -1,4 +1,5 @@
 // Global search, suggestions and the lists behind each module page.
+import { escapeHtml } from './guard.mjs';
 import { client, embed, INDEX, HYBRID_PIPELINE } from './lib.mjs';
 import { PEOPLE } from '../../seed/data.mjs';
 
@@ -88,7 +89,9 @@ export const search = async (person, { q, type, space, from, to, mode = 'keyword
     total: result.hits.total.value,
     hits: result.hits.hits.map((hit) => ({
       id: hit._id, score: hit._score, ...hit._source,
-      titleHtml: hit.highlight?.title?.[0], snippetHtml: hit.highlight?.body?.[0],
+      // Always HTML-safe: the highlighter escapes what it marks, and the rest is escaped here.
+      titleHtml: hit.highlight?.title?.[0] ?? escapeHtml(hit._source.title),
+      snippetHtml: hit.highlight?.body?.[0] ?? escapeHtml(String(hit._source.body || '').slice(0, 160)),
     })),
     types: Object.fromEntries(result.aggregations.types.buckets.map((bucket) => [bucket.key, bucket.doc_count])),
     spaces: Object.fromEntries(result.aggregations.spaces.buckets.map((bucket) => [bucket.key, bucket.doc_count])),

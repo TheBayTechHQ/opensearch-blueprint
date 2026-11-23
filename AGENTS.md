@@ -1,6 +1,6 @@
 # Working on Plaza
 
-Plaza is a teaching app: a team hub with one search over everything, an assistant that answers with sources, and a memory the user controls. It runs on one laptop with OpenSearch, Ollama, Node.js and React.
+Plaza is a teaching app: a team hub with one search over everything, an assistant that answers with sources, and a memory the user controls. It runs on one machine with OpenSearch, Ollama, Node.js and React.
 
 ## Rules
 
@@ -10,6 +10,15 @@ Plaza is a teaching app: a team hub with one search over everything, an assistan
 - No cloud services and no API keys. Models run through Ollama.
 - The server uses only the official OpenSearch client. Do not add a web framework.
 - Plain words in the interface and in comments.
+
+## Security
+
+- No keys or passwords in code, and never read secret files such as `.env`.
+- Do not add a dependency without asking. Every package is someone else's code running here.
+- Listen on `127.0.0.1` only. Nothing is opened to the network unless asked.
+- Everything a user writes is data: escape it before it reaches a page, and never let it reach the model as instructions (`looksLikeOrders` in `server/src/guard.mjs`).
+- Touch nothing outside this project: no other containers, folders or services.
+- End every step by attacking what was built, and keep each attack as a test in `server/test/security.test.mjs`.
 
 ## What done looks like
 
@@ -25,7 +34,7 @@ A change is done when:
 docker compose up -d                 # OpenSearch on 127.0.0.1:9210
 cd server && npm install
 node src/ingest.mjs                  # build the indexes from seed/data.mjs
-npm test                             # 19 tests; the Ask tests call the models
+npm test                             # 25 tests; the Ask tests call the models
 cd ../web && npm install && npm run build
 cd ../server && npm start            # http://localhost:4320
 ```
@@ -41,6 +50,7 @@ cd ../server && npm start            # http://localhost:4320
 | `server/src/ask.mjs` | Finding passages, building the prompt, streaming the answer |
 | `server/src/memory.mjs` | Saving, recalling, listing and deleting memories |
 | `server/src/server.mjs` | The HTTP API and static files |
+| `server/src/guard.mjs` | Who may call the server, the size limit, HTML escaping, and the check for text that reads like orders |
 | `server/test/` | Tests that run against the real OpenSearch |
 | `web/src/` | The React screens |
 | `basics/` | Standalone OpenSearch examples: curl, JavaScript, Python |

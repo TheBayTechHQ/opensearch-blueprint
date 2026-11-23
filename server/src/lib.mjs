@@ -3,6 +3,7 @@ import { Client } from '@opensearch-project/opensearch';
 
 export const config = {
   port: Number(process.env.PORT || 4320),
+  host: process.env.HOST || '127.0.0.1',
   opensearchUrl: process.env.OPENSEARCH_URL || 'http://127.0.0.1:9210',
   ollamaUrl: process.env.OLLAMA_URL || 'http://127.0.0.1:11434',
   embedModel: process.env.EMBED_MODEL || 'nomic-embed-text',

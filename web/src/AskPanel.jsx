@@ -86,7 +86,7 @@ export default function AskPanel({ person, spaces, open, onClose }) {
                 </p>
               )}
               {turn.search && (
-                <p className="flex items-center gap-1.5" data-step="search"><Search size={13} className="text-indigo-500" /> Found {turn.search.count} passages in {turn.search.ms} ms</p>
+                <p className="flex items-center gap-1.5" data-step="search"><Search size={13} className="text-indigo-500" /> Found {turn.search.count} passages in {turn.search.ms} ms{turn.search.held > 0 && <span className="ml-1 font-semibold text-amber-600" data-held>· {turn.search.held} held back: it reads like orders, not content</span>}</p>
               )}
             </div>
             {turn.answer ? <Answer text={turn.answer} /> : <p className="animate-pulse text-sm text-slate-400">Reading…</p>}

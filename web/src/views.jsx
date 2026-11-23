@@ -165,8 +165,8 @@ export const SearchView = ({ query, allSpaces, open }) => {
                 <SpaceTag id={hit.space} spaces={allSpaces} />
                 <span className="text-xs text-slate-400">{hit.author_name ? `${hit.author_name} · ` : ''}{day(hit.created)}</span>
               </span>
-              {hit.title && <span className="block text-[15px] font-bold" dangerouslySetInnerHTML={{ __html: hit.titleHtml || hit.title }} />}
-              <span className="mt-0.5 block text-sm leading-relaxed text-slate-600" dangerouslySetInnerHTML={{ __html: hit.snippetHtml || hit.body.slice(0, 160) }} />
+              {hit.title && <span className="block text-[15px] font-bold" dangerouslySetInnerHTML={{ __html: hit.titleHtml }} />}
+              <span className="mt-0.5 block text-sm leading-relaxed text-slate-600" dangerouslySetInnerHTML={{ __html: hit.snippetHtml }} />
             </button>
           </li>
         ))}

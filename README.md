@@ -1,6 +1,6 @@
 # Plaza: a team hub built on OpenSearch
 
-A complete example that runs on one laptop. Plaza is where a company's groups keep documents, discussions, events and messages, with:
+A complete example that runs on one machine. Plaza is where a company's groups keep documents, discussions, events and messages, with:
 
 - **Global search**: one box over everything, with highlights, filters, suggestions while you type and typo tolerance.
 - **Ask**: an assistant that answers from the content, shows its sources, and says so when it does not know.
@@ -142,7 +142,7 @@ Send the header `x-user` with a person's id (`ava`, `noor`, ...). There is no si
 cd server && npm test
 ```
 
-Nineteen tests run against the real OpenSearch and the real models: search behaviour, permissions (two people, different results), Ask (an answer with its source, a question with no answer, a question about a space the person is not in) and Memory (save, recall in a new question, delete, and one person's memory never showing for another).
+Twenty-five tests run against the real OpenSearch and the real models: search behaviour, permissions (two people, different results), Ask (an answer with its source, a question with no answer, a question about a space the person is not in) and Memory (save, recall in a new question, delete, and one person's memory never showing for another), and Security (six attacks that worked before their fixes).
 
 ## Settings
 
@@ -157,6 +157,20 @@ Optional environment variables, read in `server/src/lib.mjs`.
 | `CHAT_MODEL` | `qwen3:8b` |
 
 Dates in the sample data are relative: "today" is the day you run `ingest.mjs`. Run it again to refresh them.
+
+## Security
+
+Plaza was attacked five ways after it was built, and all five worked. Each is now fixed and kept as a test in `server/test/security.test.mjs`.
+
+| Attack | What happened | Fix |
+| --- | --- | --- |
+| Reach it from the network | The server listened on every address | It listens on `127.0.0.1` only |
+| A request from another web page | A form posted from any site was accepted | Only its own address, its own pages and JSON are accepted (`checkRequest`) |
+| A script inside a chat message | Results found by meaning were put into the page as HTML | Every result is escaped (`escapeHtml`), and a content security policy is sent |
+| Orders for the assistant inside a chat message (prompt injection) | The assistant repeated them word for word | Passages that read like orders are held back (`looksLikeOrders`); the prompt marks passages as content |
+| A very large request | Read in full | Bodies over 64 KB are refused |
+
+Prompt injection has no complete fix. The check catches plain cases only. What limits the damage is that the assistant can only read, only from the asker's own spaces, and always shows its sources.
 
 ## Limits of this example
 

@@ -2,27 +2,22 @@
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
-import { dirname, extname, join, normalize } from 'node:path';
+import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { client, config, INDEX } from './lib.mjs';
 import { personOf, search, suggest, list, getOne, postMessage } from './search.mjs';
 import { ask } from './ask.mjs';
 import { listMemories, forget } from './memory.mjs';
 import { ingest } from './ingest.mjs';
+import { checkRequest, readBody, SECURITY_HEADERS } from './guard.mjs';
 import { SPACES, PEOPLE } from '../../seed/data.mjs';
 
 const webRoot = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'web', 'dist');
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json', '.ico': 'image/x-icon' };
 
 const json = (response, status, data) => {
-  response.writeHead(status, { 'content-type': 'application/json' });
+  response.writeHead(status, { 'content-type': 'application/json', ...SECURITY_HEADERS });
   response.end(JSON.stringify(data));
-};
-
-const readBody = async (request) => {
-  let text = '';
-  for await (const chunk of request) text += chunk;
-  return text ? JSON.parse(text) : {};
 };
 
 /**
@@ -70,7 +65,7 @@ const api = async (request, response, url) => {
     const { question } = await readBody(request);
     if (!question?.trim()) return json(response, 400, { error: 'Ask a question.' });
     // Server-sent events: the answer appears word by word.
-    response.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
+    response.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive', ...SECURITY_HEADERS });
     const send = (event, data) => response.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
     try {
       await ask(person, question.trim(), send);
@@ -85,16 +80,21 @@ const api = async (request, response, url) => {
 const server = http.createServer(async (request, response) => {
   const url = new URL(request.url, 'http://localhost');
   try {
+    const refused = checkRequest(request, config.port);
+    if (refused) return json(response, refused.status, { error: refused.error });
     if (url.pathname.startsWith('/api/')) return await api(request, response, url);
     if (!existsSync(webRoot)) return json(response, 200, { message: 'The API is running. Build the web app (npm run build in web/) or use its dev server.' });
     const wanted = normalize(join(webRoot, url.pathname));
-    const file = wanted.startsWith(webRoot) && extname(wanted) && existsSync(wanted) ? wanted : join(webRoot, 'index.html');
-    response.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream' });
+    const file = wanted.startsWith(webRoot + sep) && extname(wanted) && existsSync(wanted) ? wanted : join(webRoot, 'index.html');
+    response.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream', ...SECURITY_HEADERS });
     return response.end(await readFile(file));
   } catch (error) {
     if (response.headersSent) return response.end();
-    return json(response, error.status || 500, { error: error.message });
+    // Our own refusals carry a status and a plain message; anything else stays in the log.
+    if (!error.status) console.error(error);
+    return json(response, error.status || 500, { error: error.status ? error.message : 'Something went wrong.' });
   }
 });
 
-server.listen(config.port, () => console.log(`Plaza is on http://localhost:${config.port}`));
+// Local only: the server does not listen on the network.
+server.listen(config.port, config.host, () => console.log(`Plaza is on http://localhost:${config.port}`));
